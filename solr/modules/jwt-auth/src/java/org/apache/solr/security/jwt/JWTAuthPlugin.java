@@ -97,6 +97,7 @@ public class JWTAuthPlugin extends AuthenticationPlugin
   private static final String PARAM_REALM = "realm";
   private static final String PARAM_TRUSTED_CERTS_FILE = "trustedCertsFile";
   private static final String PARAM_TRUSTED_CERTS = "trustedCerts";
+  private static final String PARAM_SCOPE_CLAIM = "scopeClaim";
 
   private static final String DEFAULT_AUTH_REALM = "solr-jwt";
   private static final String CLAIM_SCOPE = "scope";
@@ -124,6 +125,7 @@ public class JWTAuthPlugin extends AuthenticationPlugin
           PARAM_ISSUERS,
           PARAM_TRUSTED_CERTS_FILE,
           PARAM_TRUSTED_CERTS,
+		  PARAM_SCOPE_CLAIM,
           // These keys are supported for now to enable PRIMARY issuer config through top-level keys
           JWTIssuerConfig.PARAM_JWKS_URL,
           JWTIssuerConfig.PARAM_JWK,
@@ -151,6 +153,7 @@ public class JWTAuthPlugin extends AuthenticationPlugin
   private Collection<X509Certificate> trustedSslCerts;
   String realm;
   private final CoreContainer coreContainer;
+  private String scopeClaim;
 
   /** Initialize plugin */
   public JWTAuthPlugin() {
@@ -187,6 +190,7 @@ public class JWTAuthPlugin extends AuthenticationPlugin
     principalClaim = (String) pluginConfig.getOrDefault(PARAM_PRINCIPAL_CLAIM, "sub");
 
     rolesClaim = (String) pluginConfig.get(PARAM_ROLES_CLAIM);
+	scopeClaim = (String) pluginConfig.getOrDefault(PARAM_SCOPE_CLAIM, CLAIM_SCOPE);
     algAllowlist = (List<String>) pluginConfig.get(PARAM_ALG_ALLOWLIST);
     // TODO: Remove deprecated warning in Solr 10.0
     if ((algAllowlist == null || algAllowlist.isEmpty())
@@ -560,21 +564,21 @@ public class JWTAuthPlugin extends AuthenticationPlugin
                 }
               }
             }
-            if (!requiredScopes.isEmpty() && !jwtClaims.hasClaim(CLAIM_SCOPE)) {
+            if (!requiredScopes.isEmpty() && !jwtClaims.hasClaim(scopeClaim)) {
               // Fail if we require scopes but they don't exist
               return new JWTAuthenticationResponse(
                   AuthCode.CLAIM_MISMATCH,
-                  "Claim " + CLAIM_SCOPE + " is required but does not exist in JWT");
+                  "Claim " + scopeClaim + " is required but does not exist in JWT");
             }
 
             // Find scopes for user
             Set<String> scopes = Collections.emptySet();
-            Object scopesObj = jwtClaims.getClaimValue(CLAIM_SCOPE);
+            Object scopesObj = jwtClaims.getClaimValue(scopeClaim);
             if (scopesObj != null) {
               if (scopesObj instanceof String) {
                 scopes = new HashSet<>(Arrays.asList(((String) scopesObj).split("\\s+")));
               } else if (scopesObj instanceof List) {
-                scopes = new HashSet<>(jwtClaims.getStringListClaimValue(CLAIM_SCOPE));
+                scopes = new HashSet<>(jwtClaims.getStringListClaimValue(scopeClaim));
               }
               // Validate that at least one of the required scopes are present in the scope claim
               if (!requiredScopes.isEmpty()) {
@@ -582,7 +586,7 @@ public class JWTAuthPlugin extends AuthenticationPlugin
                   return new JWTAuthenticationResponse(
                       AuthCode.SCOPE_MISSING,
                       "Claim "
-                          + CLAIM_SCOPE
+                          + scopeClaim
                           + " does not contain any of the required scopes: "
                           + requiredScopes);
                 }
