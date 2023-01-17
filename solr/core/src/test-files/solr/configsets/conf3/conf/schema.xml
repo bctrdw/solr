@@ -26,4 +26,18 @@
   <field name="id" type="string" indexed="true" stored="true"/>
   <dynamicField name="*_s"  type="string"  indexed="true"  stored="true" />
   <uniqueKey>id</uniqueKey>
+  <query>
+    <filterCache
+            size="0"
+            initialSize="0"
+            autowarmCount="0"/>
+    <queryResultCache
+            size="0"
+            initialSize="0"
+            autowarmCount="0"/>
+    <documentCache
+            size="0"
+            initialSize="0"
+            autowarmCount="0"/>
+  </query>
 </schema>

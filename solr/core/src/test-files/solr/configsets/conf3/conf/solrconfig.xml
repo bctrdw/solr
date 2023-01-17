@@ -44,8 +44,25 @@
     </lst>
 
   </requestHandler>
+  <query>
+    <filterCache
+            class = "mypkg:org.apache.solr.search.CaffeineCache"
+            size="512"
+            initialSize="512"
+            autowarmCount="0" />
+
+    <queryResultCache
+            size="512"
+            initialSize="512"
+            autowarmCount="0" />
+
+    <documentCache
+            size="512"
+            initialSize="512"
+            autowarmCount="0" />
+  </query>
   <indexConfig>
     <mergeScheduler class="${solr.mscheduler:org.apache.lucene.index.ConcurrentMergeScheduler}"/>
-:  </indexConfig>
+  </indexConfig>
 </config>
 
